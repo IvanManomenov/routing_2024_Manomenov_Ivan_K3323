@@ -6,61 +6,8 @@
 Лабораторная работа выполнялась на компьютере с операционной системой Linux, оболочка Ubuntu 22.04.3
 
 Перед началом лабораторной работы на компьютер были установлены Docker и Containerlabs, а также скачан требуемый репозиторий с GitHub
-### Создание топологии
 
-Был написан файл lab_1.yaml, задающий топологию сети:
-
-```
-name: lab_1
-
-topology:
- nodes:
-  Router1:
-   kind: vr-mikrotik_ros
-   image: vrnetlab/mikrotik_routeros:6.47.9
-   mgmt-ipv4: 192.168.2.254
-   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/router.cfg
-  L3_Switch1:
-   kind: vr-mikrotik_ros
-   image: vrnetlab/mikrotik_routeros:6.47.9
-   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch1.cfg
-
-   mgmt-ipv4: 192.168.2.10
-  L3_Switch2:
-   kind: vr-mikrotik_ros
-   image: vrnetlab/mikrotik_routeros:6.47.9
-   mgmt-ipv4: 192.168.2.20
-   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch2.cfg
-
-  L3_Switch3:
-   kind: vr-mikrotik_ros
-   image: vrnetlab/mikrotik_routeros:6.47.9
-   mgmt-ipv4: 192.168.2.30
-   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch3.cfg
-
-  PC1:
-   kind: linux
-   image: ubuntu:focal
-   mgmt-ipv4: 192.168.2.100
-  PC2:
-   kind: linux
-   image: ubuntu:focal
-   mgmt-ipv4: 192.168.2.101
- links:
-   - endpoints: ["Router1:eth1", "L3_Switch1:eth1"]
-   - endpoints: ["L3_Switch2:eth1", "L3_Switch1:eth2"]
-   - endpoints: ["L3_Switch3:eth1", "L3_Switch1:eth3"]
-   - endpoints: ["PC1:eth1", "L3_Switch2:eth2"]
-   - endpoints: ["PC2:eth1", "L3_Switch3:eth2"]
-
-mgmt:
- network: static
- ipv4-subnet: 192.168.2.0/24
-```
-При помощи команды sudo containerlab deploy -t lab1.yml топология была создана, а при помощи sudo containerlab graph -t lab1.yml визуализирована (результат на рисунке ниже)
-![image](https://github.com/user-attachments/assets/2bd3a8f3-51b5-452f-814f-c86c28a6d991)
-
-### Настройка устройств
+### Настройка роутера и маршрутизаторов
 
 В папке config были созданы файлы с конфигурацией роутера и маршрутизаторов
 
@@ -133,3 +80,83 @@ add address=10.10.2.2/19 interface=ether2 network=10.10.0.0
 add address=10.10.10.128/25 gateway=10.10.10.129
 add address=10.10.20.128/25 gateway=10.10.20.129
 ```
+
+### Создание топологии
+
+Был написан файл lab_1.yaml, задающий топологию сети:
+
+```
+name: lab_1
+
+topology:
+ nodes:
+  Router1:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   mgmt-ipv4: 192.168.2.254
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/router.cfg
+  L3_Switch1:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch1.cfg
+
+   mgmt-ipv4: 192.168.2.10
+  L3_Switch2:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   mgmt-ipv4: 192.168.2.20
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch2.cfg
+
+  L3_Switch3:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   mgmt-ipv4: 192.168.2.30
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch3.cfg
+
+  PC1:
+   kind: linux
+   image: alpine:latest
+   mgmt-ipv4: 192.168.2.100
+  PC2:
+   kind: linux
+   image: alpine:latest
+   mgmt-ipv4: 192.168.2.101
+ links:
+   - endpoints: ["Router1:eth1", "L3_Switch1:eth1"]
+   - endpoints: ["L3_Switch2:eth1", "L3_Switch1:eth2"]
+   - endpoints: ["L3_Switch3:eth1", "L3_Switch1:eth3"]
+   - endpoints: ["PC1:eth1", "L3_Switch2:eth2"]
+   - endpoints: ["PC2:eth1", "L3_Switch3:eth2"]
+
+mgmt:
+ network: static
+ ipv4-subnet: 192.168.2.0/24
+```
+При помощи команды sudo containerlab deploy -t lab1.yml топология была создана, а при помощи sudo containerlab graph -t lab1.yml визуализирована (результат на рисунке ниже)
+![image](https://github.com/user-attachments/assets/2bd3a8f3-51b5-452f-814f-c86c28a6d991)
+
+### Присвоение ip ПК
+
+Для присвоения ip запустим компьютеры через оболочку sh следующей командой:
+```
+docker exec -it clab-lab_1-PC1 sh
+```
+
+Далее запустим udhcpc для автоматического присвоения ip, получим следующее:
+
+```
+/ # udhcpc -i eth1
+udhcpc: started, v1.36.1
+udhcpc: broadcasting discover
+udhcpc: broadcasting select for 10.10.10.252, server 10.10.10.129
+udhcpc: lease of 10.10.10.252 obtained from 10.10.10.129, lease time 600
+```
+
+Таким образом, PC1 получил ip 10.10.10.252
+
+Аналогично PC2 был присвоен ip 10.10.20.252
+
+### Проверка связности
+
+Сделаем несколько пингов.
+
