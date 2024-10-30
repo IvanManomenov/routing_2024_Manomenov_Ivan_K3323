@@ -1,0 +1,135 @@
+# Отчет по лабораторной работе №1 "Установка ContainerLab и развёртывание тестовой сети связи"
+
+## Цель работы
+Ознакомиться с инструментом ContainerLab и методами работы с ним, изучить работу VLAN, IP адресации и т.д.
+## Ход работы
+Лабораторная работа выполнялась на компьютере с операционной системой Linux, оболочка Ubuntu 22.04.3
+
+Перед началом лабораторной работы на компьютер были установлены Docker и Containerlabs, а также скачан требуемый репозиторий с GitHub
+### Создание топологии
+
+Был написан файл lab_1.yaml, задающий топологию сети:
+
+```
+name: lab_1
+
+topology:
+ nodes:
+  Router1:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   mgmt-ipv4: 192.168.2.254
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/router.cfg
+  L3_Switch1:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch1.cfg
+
+   mgmt-ipv4: 192.168.2.10
+  L3_Switch2:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   mgmt-ipv4: 192.168.2.20
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch2.cfg
+
+  L3_Switch3:
+   kind: vr-mikrotik_ros
+   image: vrnetlab/mikrotik_routeros:6.47.9
+   mgmt-ipv4: 192.168.2.30
+   startup-config: /home/man-men-off/ITMO/routing_labs/lab1/configs/switch3.cfg
+
+  PC1:
+   kind: linux
+   image: ubuntu:focal
+   mgmt-ipv4: 192.168.2.100
+  PC2:
+   kind: linux
+   image: ubuntu:focal
+   mgmt-ipv4: 192.168.2.101
+ links:
+   - endpoints: ["Router1:eth1", "L3_Switch1:eth1"]
+   - endpoints: ["L3_Switch2:eth1", "L3_Switch1:eth2"]
+   - endpoints: ["L3_Switch3:eth1", "L3_Switch1:eth3"]
+   - endpoints: ["PC1:eth1", "L3_Switch2:eth2"]
+   - endpoints: ["PC2:eth1", "L3_Switch3:eth2"]
+
+mgmt:
+ network: static
+ ipv4-subnet: 192.168.2.0/24
+```
+При помощи команды sudo containerlab deploy -t lab1.yml топология была создана, а при помощи sudo containerlab graph -t lab1.yml визуализирована (результат на рисунке ниже)
+![image](https://github.com/user-attachments/assets/2bd3a8f3-51b5-452f-814f-c86c28a6d991)
+
+### Настройка устройств
+
+В папке config были созданы файлы с конфигурацией роутера и маршрутизаторов
+
+Файл switch1.cfg:
+
+```
+/interface bridge
+add name=bridge10
+add name=bridge20
+/interface vlan
+add interface=ether2 name=vlan10 vlan-id=10
+add interface=ether3 name=vlan11 vlan-id=10
+add interface=ether2 name=vlan20 vlan-id=20
+add interface=ether4 name=vlan21 vlan-id=20
+/interface bridge port
+add bridge=bridge10 interface=vlan10
+add bridge=bridge10 interface=vlan11
+add bridge=bridge20 interface=vlan21
+add bridge=bridge20 interface=vlan20
+/ip dhcp-client
+add disabled=no interface=bridge10
+add disabled=no interface=bridge20
+```
+
+Файл switch2.cfg:
+
+```
+/interface bridge
+add name=bridge10
+/interface vlan
+add interface=ether2 name=vlan10 vlan-id=10
+/interface bridge port
+add bridge=bridge10 interface=vlan10
+add bridge=bridge10 interface=ether3
+/ip dhcp-client
+add disabled=no interface=bridge10
+```
+
+Файл switch3.cfg:
+
+```
+/interface bridge
+add name=bridge20
+/interface vlan
+add interface=ether2 name=vlan20 vlan-id=20
+/interface bridge port
+add bridge=bridge20 interface=vlan20
+add bridge=bridge20 interface=ether3
+/ip dhcp-client
+add disabled=no interface=bridge20
+```
+
+Файл router.cfg:
+
+```
+/interface vlan
+add interface=ether2 name=vlan10 vlan-id=10
+add interface=ether2 name=vlan20 vlan-id=20
+/ip pool
+add name=vlan10_pool ranges=10.10.10.0-10.10.10.254
+add name=vlan20_pool ranges=10.10.20.0-10.10.20.254
+/ip dhcp-server
+add address-pool=vlan10_pool disabled=no interface=vlan10 name=dhcp-vlan10
+add address-pool=vlan20_pool disabled=no interface=vlan20 name=dhcp-vlan20
+/ip address
+add address=10.10.10.129/25 interface=vlan10 network=10.10.10.128
+add address=10.10.20.129/25 interface=vlan20 network=10.10.20.128
+add address=10.10.2.2/19 interface=ether2 network=10.10.0.0
+/ip dhcp-server network
+add address=10.10.10.128/25 gateway=10.10.10.129
+add address=10.10.20.128/25 gateway=10.10.20.129
+```
