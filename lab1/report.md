@@ -1,3 +1,11 @@
+* *Курс: Введение в маршрутизацию на предприятии*
+
+* *Студент: Маноменов Иван Андреевич*
+
+* *Группа: К3323*
+
+* *Дата сдачи: 30.10.24*
+
 # Отчет по лабораторной работе №1 "Установка ContainerLab и развёртывание тестовой сети связи"
 
 ## Цель работы
@@ -132,9 +140,8 @@ mgmt:
  network: static
  ipv4-subnet: 192.168.2.0/24
 ```
-При помощи команды sudo containerlab deploy -t lab1.yml топология была создана, а при помощи sudo containerlab graph -t lab1.yml визуализирована (результат на рисунке ниже)
-![image](https://github.com/user-attachments/assets/2bd3a8f3-51b5-452f-814f-c86c28a6d991)
-
+При помощи команды sudo containerlab deploy -t lab1.yml топология была создана, а при помощи sudo containerlab graph -t lab1.yml визуализирована, также на граф были добавлены назначенные ip (результат на рисунке ниже)
+![Топология сети с ip](https://github.com/IvanManomenov/routing_2024_Manomenov_Ivan_K3323/blob/main/lab1/topology_with_ip.png)
 ### Присвоение ip ПК
 
 Для присвоения ip запустим компьютеры через оболочку sh следующей командой:
@@ -154,9 +161,23 @@ udhcpc: lease of 10.10.10.252 obtained from 10.10.10.129, lease time 600
 
 Таким образом, PC1 получил ip 10.10.10.252
 
+
 Аналогично PC2 был присвоен ip 10.10.20.252
 
 ### Проверка связности
 
 Сделаем несколько пингов.
 
+Пинг первого компьютера с роутера:
+
+![Пинг1](https://github.com/IvanManomenov/routing_2024_Manomenov_Ivan_K3323/blob/main/lab1/ping_router_pc1.png)
+
+Пинг второго компьютера с маршрутизатора:
+
+![Пинг2](https://github.com/IvanManomenov/routing_2024_Manomenov_Ivan_K3323/blob/main/lab1/ping_L3_pc2.png)
+
+Как можно видеть, пакеты доходят успешно
+
+## Выводы
+
+В рамках выполнения лабораторной работы были изучены основы работы с Containerlabs: написание топологии сети, конфигурации элементов.
