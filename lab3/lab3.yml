@@ -1,0 +1,53 @@
+name: lab_3
+
+mgmt:
+  network: mgmt
+  ipv4-subnet: 192.168.100.0/24
+
+topology:
+  kinds:
+    vr-ros:
+        image: docker.io/paradox233/vr-routeros:6.48.6
+    linux:
+        image: ghcr.io/hellt/network-multitool
+  nodes:
+    NY:
+      kind: vr-ros
+      mgmt-ipv4: 192.168.100.2
+      startup-config: /home/man-men-off/ITMO/routing_labs/lab3/configs/NY.rsc
+    LND:
+      kind: vr-ros
+      mgmt-ipv4: 192.168.100.3
+      startup-config: /home/man-men-off/ITMO/routing_labs/lab3/configs/LND.rsc
+    HKI:
+      kind: vr-ros
+      mgmt-ipv4: 192.168.100.4
+      startup-config: /home/man-men-off/ITMO/routing_labs/lab3/configs/HKI.rsc
+    SPB:
+      kind: vr-ros
+      mgmt-ipv4: 192.168.100.5
+      startup-config: /home/man-men-off/ITMO/routing_labs/lab3/configs/SPB.rsc
+    MSK:
+      kind: vr-ros
+      mgmt-ipv4: 192.168.100.6
+      startup-config: /home/man-men-off/ITMO/routing_labs/lab3/configs/MSK.rsc
+    LBN:
+      kind: vr-ros
+      mgmt-ipv4: 192.168.100.7
+      startup-config: /home/man-men-off/ITMO/routing_labs/lab3/configs/LBN.rsc
+    SGI.Prism:
+      kind: linux
+      mgmt-ipv4: 192.168.100.8
+    PC1:
+      kind: linux
+      mgmt-ipv4: 192.168.100.9
+  links:
+    - endpoints: ["NY:eth2", "LND:eth3"]
+    - endpoints: ["LND:eth2", "HKI:eth3"]
+    - endpoints: ["HKI:eth2", "SPB:eth3"]
+    - endpoints: ["SPB:eth2", "MSK:eth3"]
+    - endpoints: ["MSK:eth2", "LBN:eth3"]
+    - endpoints: ["LBN:eth2", "NY:eth3"]
+    - endpoints: ["NY:eth4", "SGI.Prism:eth2"]
+    - endpoints: ["SPB:eth4", "PC1:eth2"]
+    - endpoints: ["LBN:eth4", "HKI:eth4"]
