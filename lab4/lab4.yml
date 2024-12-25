@@ -1,0 +1,50 @@
+name: lab_4
+
+mgmt:
+    network: mgmt-net
+    ipv4-subnet: 192.168.100.0/24
+topology:
+    kinds:
+        vr-ros:
+            image: docker.io/paradox233/vr-routeros:6.48.6
+        linux:
+            image: ghcr.io/hellt/network-multitool  
+    nodes:
+        Router_SPB:
+            kind: vr-ros
+            mgmt-ipv4: 192.168.100.2 
+        Router_NY:
+            kind: vr-ros
+            mgmt-ipv4: 192.168.100.3
+        Router_SVL:
+            kind: vr-ros
+            mgmt-ipv4: 192.168.100.4
+        Router_HKI:
+            kind: vr-ros
+            mgmt-ipv4: 192.168.100.5
+        Router_LND:
+            kind: vr-ros
+            mgmt-ipv4: 192.168.100.6
+        Router_LBN:
+            kind: vr-ros
+            mgmt-ipv4: 192.168.100.7
+        PC1:
+            kind: linux
+            mgmt-ipv4: 192.168.100.8
+        PC2:
+            kind: linux
+            mgmt-ipv4: 192.168.100.9
+        PC3:
+            kind: linux
+            mgmt-ipv4: 192.168.100.10
+
+    links:
+        - endpoints: ["PC1:eth2", "Router_SPB:eth2"]
+        - endpoints: ["PC2:eth2", "Router_NY:eth2"]
+        - endpoints: ["PC3:eth2", "Router_SVL:eth2"]
+        - endpoints: ["Router_SPB:eth3", "Router_HKI:eth2"]
+        - endpoints: ["Router_NY:eth3", "Router_LND:eth2"]
+        - endpoints: ["Router_SVL:eth3", "Router_LBN:eth2"]
+        - endpoints: ["Router_HKI:eth3", "Router_LND:eth4"]
+        - endpoints: ["Router_LND:eth3", "Router_LBN:eth4"]
+        - endpoints: ["Router_LBN:eth3", "Router_HKI:eth4"]
